@@ -1408,7 +1408,5 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/research-papers-pipeline/discussions)
 
 ---
-
-**Version:** 4.0  
 **Status:** ✅ Production Ready  
 **Maintainers:** Hamza Elmourabit
