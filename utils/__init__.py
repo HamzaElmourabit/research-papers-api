@@ -6,11 +6,10 @@ from .error_handling import (
 
 from .data_quality import (
     DataQualityMetrics,
-    QualityLevel,
     DataQualityValidator,
-    DataQualityAlert
+    DataQualityAlert,
+    QualityLevel
 )
-
 from .logging_config import (
     setup_logging,
     get_logger,
