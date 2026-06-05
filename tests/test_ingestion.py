@@ -16,7 +16,7 @@ def test_arxiv_ingestion_pipeline():
 
     KEYSPACE = "arxiv"
 
-    # ✅ FIX 1: keyspace safe
+    # CREATE KEYSPACE SAFE
     session.execute(f"""
         CREATE KEYSPACE IF NOT EXISTS {KEYSPACE}
         WITH replication = {{'class': 'SimpleStrategy', 'replication_factor': 1}}
@@ -24,7 +24,7 @@ def test_arxiv_ingestion_pipeline():
 
     session.set_keyspace(KEYSPACE)
 
-    # ✅ FIX 2: table safe
+    # CREATE TABLE SAFE
     session.execute("""
     CREATE TABLE IF NOT EXISTS papers_raw (
         batch_id uuid,
@@ -44,13 +44,12 @@ def test_arxiv_ingestion_pipeline():
 
     batch_id = uuid.uuid4()
 
-    insert_statement = session.prepare("""
+    insert_stmt = session.prepare("""
         INSERT INTO papers_raw (
             batch_id, arxiv_id, title, abstract, authors,
             categories, primary_category, published_date,
             updated_date, pdf_url, raw_json, ingested_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """)
 
     client = arxiv.Client()
@@ -64,7 +63,7 @@ def test_arxiv_ingestion_pipeline():
     count = 0
 
     for result in client.results(search):
-        session.execute(insert_statement, (
+        session.execute(insert_stmt, (
             batch_id,
             result.entry_id.split("/")[-1],
             result.title,
