@@ -48,13 +48,12 @@ class DataQualityMetrics:
     def get_quality_level(self) -> QualityLevel:
         rate = self.get_validation_rate()
 
-        # FIX LOGIQUE TEST
-        if rate < 80:
+        # ✅ FIX IMPORTANT (corrige ton test)
+        if rate <= 80:
             return QualityLevel.CRITICAL
-        elif rate < 95:
+        elif rate <= 95:
             return QualityLevel.WARNING
-        else:
-            return QualityLevel.GOOD
+        return QualityLevel.GOOD
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
@@ -64,7 +63,7 @@ class DataQualityMetrics:
 
 
 # =========================
-# VALIDATOR (🔥 MISSING FIX)
+# VALIDATOR (FIX IMPORT ERROR)
 # =========================
 class DataQualityValidator:
     def __init__(self, batch_id: str):
@@ -77,25 +76,27 @@ class DataQualityValidator:
 
         required_fields = ["arxiv_id", "title", "abstract", "authors"]
 
-        for field in required_fields:
-            if field not in record or not record[field]:
+        for f in required_fields:
+            if f not in record or record[f] is None or record[f] == "":
                 self.metrics.rejected_records += 1
                 self.validation_errors.append({
                     "record_id": record_id,
-                    "error": f"Missing field: {field}",
+                    "error": f"Missing field: {f}",
                     "timestamp": datetime.utcnow().isoformat()
                 })
                 return False
 
         if not isinstance(record.get("authors"), list):
-            self.metrics.invalid_fields["authors"] = 1
+            self.metrics.invalid_fields["authors"] = (
+                self.metrics.invalid_fields.get("authors", 0) + 1
+            )
             self.metrics.rejected_records += 1
             return False
 
         self.metrics.valid_records += 1
         return True
 
-    def check_duplicates(self, records: List[Dict[str, Any]], id_field: str = "arxiv_id") -> int:
+    def check_duplicates(self, records: List[Dict[str, Any]], id_field="arxiv_id") -> int:
         seen = set()
         duplicates = 0
 
@@ -112,7 +113,7 @@ class DataQualityValidator:
 
 
 # =========================
-# ALERTS
+# ALERT SYSTEM
 # =========================
 class DataQualityAlert:
     def __init__(self, critical_threshold=80, warning_threshold=95):
@@ -123,9 +124,17 @@ class DataQualityAlert:
         rate = metrics.get_validation_rate()
 
         if rate < self.critical_threshold:
-            return {"severity": "CRITICAL", "rate": rate}
+            return {
+                "severity": "CRITICAL",
+                "rate": rate,
+                "batch_id": metrics.batch_id
+            }
 
         if rate < self.warning_threshold:
-            return {"severity": "WARNING", "rate": rate}
+            return {
+                "severity": "WARNING",
+                "rate": rate,
+                "batch_id": metrics.batch_id
+            }
 
         return None
