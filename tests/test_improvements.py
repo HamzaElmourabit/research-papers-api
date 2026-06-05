@@ -4,19 +4,23 @@ Exécuter avec: pytest tests/test_improvements.py -v
 """
 
 import pytest
-from datetime import datetime
-from utils import (
+from utils.error_handling import (
     CircuitBreaker,
     CircuitBreakerError,
-    retry_with_backoff,
+    retry_with_backoff
+)
+
+from utils.data_quality import (
     DataQualityValidator,
     DataQualityAlert,
-    QualityLevel,
+    QualityLevel
+)
+
+from utils.logging_config import (
     setup_logging,
     get_logger,
     ContextFilter
 )
-
 
 class TestErrorHandling:
     """Tests for error handling module"""
