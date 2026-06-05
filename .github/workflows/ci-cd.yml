@@ -10,7 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-
+  
 
 jobs:
 
@@ -190,4 +190,7 @@ jobs:
             exit 1
           fi
           echo "CI PASSED"
+  name: Black check
+  continue-on-error: true
+  run: black --check .        
           
