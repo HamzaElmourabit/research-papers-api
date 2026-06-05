@@ -33,7 +33,18 @@ insert_statement = session.prepare("""
 """)
 
 # 4️⃣ Fetch papers and insert
-for result in search.results():
+import arxiv
+
+client = arxiv.Client()
+
+search = arxiv.Search(
+    query="machine learning",
+    max_results=5,
+    sort_by=arxiv.SortCriterion.SubmittedDate
+)
+
+for result in client.results(search):
+    print(result.title)
     paper_json = {
         "arxiv_id": result.entry_id.split("/")[-1],
         "title": result.title,
