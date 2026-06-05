@@ -4,23 +4,29 @@ Data Quality Monitoring Module
 
 import logging
 from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 from enum import Enum
 
 logger = logging.getLogger(__name__)
 
 
+# =========================
+# QUALITY LEVEL
+# =========================
 class QualityLevel(Enum):
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
     GOOD = "GOOD"
 
 
+# =========================
+# METRICS
+# =========================
 @dataclass
 class DataQualityMetrics:
     batch_id: str
-    timestamp: float | None = None
+    timestamp: Optional[datetime] = None
 
     total_records: int = 0
     valid_records: int = 0
@@ -42,16 +48,84 @@ class DataQualityMetrics:
     def get_quality_level(self) -> QualityLevel:
         rate = self.get_validation_rate()
 
-        # ✅ FIX IMPORTANT (corrige ton test)
-        if rate <= 80:
+        # FIX LOGIQUE TEST
+        if rate < 80:
             return QualityLevel.CRITICAL
-        elif rate <= 95:
+        elif rate < 95:
             return QualityLevel.WARNING
         else:
             return QualityLevel.GOOD
 
     def to_dict(self) -> Dict[str, Any]:
-        d = asdict(self)
-        d["validation_rate"] = self.get_validation_rate()
-        d["quality_level"] = self.get_quality_level().value
-        return d
+        data = asdict(self)
+        data["validation_rate"] = self.get_validation_rate()
+        data["quality_level"] = self.get_quality_level().value
+        return data
+
+
+# =========================
+# VALIDATOR (🔥 MISSING FIX)
+# =========================
+class DataQualityValidator:
+    def __init__(self, batch_id: str):
+        self.batch_id = batch_id
+        self.metrics = DataQualityMetrics(batch_id=batch_id)
+        self.validation_errors: List[Dict[str, Any]] = []
+
+    def validate_record(self, record: Dict[str, Any], record_id: str) -> bool:
+        self.metrics.total_records += 1
+
+        required_fields = ["arxiv_id", "title", "abstract", "authors"]
+
+        for field in required_fields:
+            if field not in record or not record[field]:
+                self.metrics.rejected_records += 1
+                self.validation_errors.append({
+                    "record_id": record_id,
+                    "error": f"Missing field: {field}",
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+                return False
+
+        if not isinstance(record.get("authors"), list):
+            self.metrics.invalid_fields["authors"] = 1
+            self.metrics.rejected_records += 1
+            return False
+
+        self.metrics.valid_records += 1
+        return True
+
+    def check_duplicates(self, records: List[Dict[str, Any]], id_field: str = "arxiv_id") -> int:
+        seen = set()
+        duplicates = 0
+
+        for r in records:
+            rid = r.get(id_field)
+            if rid in seen:
+                duplicates += 1
+                self.metrics.duplicate_records += 1
+                self.metrics.duplicate_ids.append(rid)
+            else:
+                seen.add(rid)
+
+        return duplicates
+
+
+# =========================
+# ALERTS
+# =========================
+class DataQualityAlert:
+    def __init__(self, critical_threshold=80, warning_threshold=95):
+        self.critical_threshold = critical_threshold
+        self.warning_threshold = warning_threshold
+
+    def check_metrics(self, metrics: DataQualityMetrics):
+        rate = metrics.get_validation_rate()
+
+        if rate < self.critical_threshold:
+            return {"severity": "CRITICAL", "rate": rate}
+
+        if rate < self.warning_threshold:
+            return {"severity": "WARNING", "rate": rate}
+
+        return None
