@@ -1,30 +1,31 @@
-from .error_handling import (
-    CircuitBreaker,
-    CircuitBreakerError,
-    retry_with_backoff
-)
+"""
+Utility modules.
+"""
 
 from .data_quality import (
     DataQualityMetrics,
     DataQualityValidator,
     DataQualityAlert,
-    QualityLevel
+    QualityLevel,
 )
+
+from .error_handling import (
+    retry_with_backoff,
+    CircuitBreaker,
+)
+
 from .logging_config import (
     setup_logging,
     get_logger,
-    ContextFilter
 )
 
 __all__ = [
-    "CircuitBreaker",
-    "CircuitBreakerError",
-    "retry_with_backoff",
     "DataQualityMetrics",
-    "QualityLevel",
     "DataQualityValidator",
     "DataQualityAlert",
+    "QualityLevel",
+    "retry_with_backoff",
+    "CircuitBreaker",
     "setup_logging",
     "get_logger",
-    "ContextFilter"
 ]
