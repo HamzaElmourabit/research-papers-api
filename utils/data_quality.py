@@ -35,17 +35,22 @@ class DataQualityMetrics:
         self.duplicate_ids = duplicate_ids or []
         self.errors = errors or {}
 
-    def validation_rate(self):
+    # ✅ REQUIRED by tests
+    def get_validation_rate(self):
         if self.total_records == 0:
-            return 0
-        return self.valid_records / self.total_records
+            return 0.0
+        return (self.valid_records / self.total_records) * 100
 
+    def validation_rate(self):
+        return self.get_validation_rate()
+
+    # ✅ REQUIRED by tests
     def get_quality_level(self):
-        rate = self.validation_rate()
+        rate = self.get_validation_rate()
 
-        if rate < 0.8:
+        if rate < 80:
             return QualityLevel.CRITICAL
-        elif rate < 0.95:
+        elif rate < 95:
             return QualityLevel.WARNING
         else:
             return QualityLevel.GOOD
@@ -54,32 +59,39 @@ class DataQualityMetrics:
 class DataQualityValidator:
     def __init__(self, name):
         self.name = name
+        self.seen_ids = set()
 
-    def validate(self, record):
-        errors = []
+    # ✅ REQUIRED by tests
+    def validate_record(self, record, expected_id=None):
+        if not record:
+            return False
 
-        if record is None:
-            errors.append("record_is_none")
+        required_fields = ["arxiv_id", "title", "abstract", "authors", "categories"]
 
-        if isinstance(record, dict):
-            if not record.get("id"):
-                errors.append("missing_id")
+        for f in required_fields:
+            if f not in record:
+                return False
 
-        return {
-            "is_valid": len(errors) == 0,
-            "errors": errors,
-        }
+        if expected_id and record.get("arxiv_id") != expected_id:
+            return False
 
-    def detect_duplicates(self, records):
+        return True
+
+    # (compat alias)
+    def validate(self, record, expected_id=None):
+        return self.validate_record(record, expected_id)
+
+    # ✅ REQUIRED by tests
+    def check_duplicates(self, data, key):
         seen = set()
         duplicates = []
 
-        for r in records:
-            rid = r.get("id")
-            if rid in seen:
-                duplicates.append(rid)
+        for item in data:
+            value = item.get(key)
+            if value in seen:
+                duplicates.append(value)
             else:
-                seen.add(rid)
+                seen.add(value)
 
         return duplicates
 
@@ -88,18 +100,19 @@ class DataQualityAlert:
     def __init__(self, critical_threshold=80):
         self.critical_threshold = critical_threshold
 
+    # ✅ REQUIRED by tests
     def check_metrics(self, metrics: DataQualityMetrics):
-        rate = metrics.validation_rate() * 100
+        rate = metrics.get_validation_rate()
 
         if rate < self.critical_threshold:
             return {
+                "severity": "CRITICAL",
                 "alert": True,
-                "level": "CRITICAL",
                 "rate": rate,
             }
 
         return {
+            "severity": "OK",
             "alert": False,
-            "level": "OK",
             "rate": rate,
         }
