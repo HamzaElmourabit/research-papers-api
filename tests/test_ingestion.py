@@ -16,7 +16,6 @@ def test_arxiv_ingestion_pipeline():
 
     KEYSPACE = "arxiv"
 
-    # CREATE KEYSPACE SAFE
     session.execute(f"""
         CREATE KEYSPACE IF NOT EXISTS {KEYSPACE}
         WITH replication = {{'class': 'SimpleStrategy', 'replication_factor': 1}}
@@ -24,7 +23,6 @@ def test_arxiv_ingestion_pipeline():
 
     session.set_keyspace(KEYSPACE)
 
-    # CREATE TABLE SAFE
     session.execute("""
     CREATE TABLE IF NOT EXISTS papers_raw (
         batch_id uuid,
@@ -63,6 +61,19 @@ def test_arxiv_ingestion_pipeline():
     count = 0
 
     for result in client.results(search):
+
+        raw_json = json.dumps({
+            "entry_id": result.entry_id,
+            "title": result.title,
+            "summary": result.summary,
+            "authors": [a.name for a in result.authors],
+            "categories": result.categories,
+            "primary_category": result.primary_category,
+            "published": str(result.published),
+            "updated": str(result.updated),
+            "pdf_url": result.pdf_url
+        })
+
         session.execute(insert_stmt, (
             batch_id,
             result.entry_id.split("/")[-1],
@@ -74,9 +85,10 @@ def test_arxiv_ingestion_pipeline():
             result.published,
             result.updated,
             result.pdf_url,
-            json.dumps(result._raw),
+            raw_json,
             datetime.utcnow()
         ))
+
         count += 1
 
     assert count > 0
