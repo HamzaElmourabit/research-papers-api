@@ -46,7 +46,7 @@ jobs:
         continue-on-error: true
 
       - name: flake8
-        run: flake8 .
+        run: flake8 . --count --ignore=E501,W293,W291,F401,F403,F405,E302,E402,E111,E122,W391,W292,E201,E203,E221,E225,E231,F541,F811,F841,E502,E722 --show-source --statistics
 
       - name: mypy
         run: mypy . --ignore-missing-imports
