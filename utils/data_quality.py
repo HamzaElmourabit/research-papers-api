@@ -55,7 +55,7 @@ class DataQualityMetrics:
 
         if rate < 80:
             return QualityLevel.CRITICAL
-        elif rate < 90:
+        elif rate <= 90:  # CORRIGÉ : Inclut maintenant la valeur 90 pile
             return QualityLevel.WARNING
         else:
             return QualityLevel.GOOD
