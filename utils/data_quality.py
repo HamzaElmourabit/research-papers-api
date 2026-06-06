@@ -38,6 +38,15 @@ class DataQualityMetrics:
             return QualityLevel.CRITICAL
 
 
+class DataQualityValidator:
+    """
+    Classe attendue par les tests (même si simple wrapper)
+    """
+
+    def validate(self, metrics: DataQualityMetrics) -> bool:
+        return metrics.validation_rate() >= 0.75
+
+
 class DataQualityAlert:
     def __init__(self, critical_threshold: float = 80):
         self.critical_threshold = critical_threshold
@@ -45,6 +54,7 @@ class DataQualityAlert:
 
     def check(self, metrics: DataQualityMetrics) -> bool:
         rate = metrics.validation_rate() * 100
+
         if rate < self.critical_threshold:
             self.alerts.append(
                 {
@@ -54,4 +64,5 @@ class DataQualityAlert:
                 }
             )
             return True
+
         return False
