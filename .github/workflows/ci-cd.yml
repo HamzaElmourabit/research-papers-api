@@ -11,7 +11,6 @@ on:
 env:
   PYTHON_VERSION: '3.11'
 
-
 jobs:
 
 # =========================
@@ -162,7 +161,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+        run: |
+          # Conversion du nom du owner en minuscules pour Docker
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$OWNER/research-papers-api-pipeline:latest .
 
 
 # =========================
