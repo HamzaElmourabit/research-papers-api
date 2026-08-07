@@ -6,7 +6,7 @@
 
 A production-grade **ETL + ELT** data engineering pipeline that fetches research papers from arXiv, validates them, stores in Cassandra, and transforms them for analytics using Databricks + Spark.
 
-**Status:** ✅ Production Ready | **Last Updated:** May 25, 2026
+
 
 ---
 ## 🏗️ Project Architecture
